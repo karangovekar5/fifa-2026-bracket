@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FIFA 2026 Visual Bracket Predictor</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="toolbar">
+      <div>
+        <p class="eyebrow">FIFA World Cup 2026</p>
+        <h1>Visual Bracket Predictor</h1>
+      </div>
+      <div class="toolbar-actions">
+        <button id="seedBtn" type="button">Restore Locked Bracket</button>
+        <button id="saveBtn" class="ghost" type="button">Save</button>
+        <button id="clearBtn" class="ghost" type="button">Clear Winners</button>
+        <button id="resetBtn" class="ghost" type="button">Reset</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="board-shell" aria-label="World Cup bracket board">
+        <div class="board">
+          <div id="leftGroups" class="group-stack left"></div>
+
+          <div class="half left-half">
+            <div class="round r32" data-round="0">
+              <h2>Round of 32</h2>
+              <div id="leftR32" class="match-stack"></div>
+            </div>
+            <div class="round r16" data-round="1">
+              <h2>Round of 16</h2>
+              <div id="leftR16" class="match-stack compact"></div>
+            </div>
+            <div class="round qf" data-round="2">
+              <h2>Quarter-final</h2>
+              <div id="leftQF" class="match-stack loose"></div>
+            </div>
+            <div class="round sf" data-round="3">
+              <h2>Semifinal 1</h2>
+              <div id="leftSF" class="match-stack solo"></div>
+            </div>
+          </div>
+
+          <div class="center-stage">
+            <div class="final-panel">
+              <h2>Final</h2>
+              <div id="finalMatch"></div>
+              <div class="trophy" aria-hidden="true">🏆</div>
+              <p id="championText" class="champion">Champion: TBD</p>
+            </div>
+            <div class="third-panel">
+              <h2>Third Place</h2>
+              <div id="thirdMatch"></div>
+            </div>
+          </div>
+
+          <div class="half right-half">
+            <div class="round sf" data-round="3">
+              <h2>Semifinal 2</h2>
+              <div id="rightSF" class="match-stack solo"></div>
+            </div>
+            <div class="round qf" data-round="2">
+              <h2>Quarter-final</h2>
+              <div id="rightQF" class="match-stack loose"></div>
+            </div>
+            <div class="round r16" data-round="1">
+              <h2>Round of 16</h2>
+              <div id="rightR16" class="match-stack compact"></div>
+            </div>
+            <div class="round r32" data-round="0">
+              <h2>Round of 32</h2>
+              <div id="rightR32" class="match-stack"></div>
+            </div>
+          </div>
+
+          <div id="rightGroups" class="group-stack right"></div>
+        </div>
+      </section>
+
+      <section class="editor">
+        <div class="editor-head">
+          <div>
+            <p class="eyebrow">Team Icons</p>
+            <h2>Group Setup</h2>
+          </div>
+          <p>These side group boxes are editable for display. The Round of 32 fixtures are locked to the reference image.</p>
+        </div>
+        <div id="groupEditor" class="editor-grid"></div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
