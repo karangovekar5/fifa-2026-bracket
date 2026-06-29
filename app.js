@@ -169,6 +169,7 @@ function render() {
   renderEditor();
   renderBracket();
   renderChampion();
+  requestAnimationFrame(drawConnectors);
 }
 
 function renderGroups() {
@@ -238,6 +239,8 @@ function renderBracket() {
 function matchElement(match, round, index, forcedCode) {
   const wrap = document.createElement("article");
   wrap.className = "match";
+  wrap.dataset.round = round;
+  wrap.dataset.index = index;
   const code = forcedCode || roundLabels[round][index];
   wrap.innerHTML = `<div class="match-code">${code}</div>`;
 
@@ -246,6 +249,51 @@ function matchElement(match, round, index, forcedCode) {
   });
 
   return wrap;
+}
+
+function drawConnectors() {
+  const svg = document.querySelector("#connectorLayer");
+  const board = document.querySelector(".board");
+  if (!svg || !board) return;
+
+  const boardRect = board.getBoundingClientRect();
+  svg.setAttribute("viewBox", `0 0 ${boardRect.width} ${boardRect.height}`);
+  svg.innerHTML = "";
+
+  const links = [
+    ...Array.from({ length: 8 }, (_, index) => [0, index, 1, Math.floor(index / 2), "left"]),
+    ...Array.from({ length: 4 }, (_, index) => [1, index, 2, Math.floor(index / 2), "left"]),
+    ...Array.from({ length: 2 }, (_, index) => [2, index, 3, 0, "left"]),
+    [3, 0, 4, 0, "left"],
+    ...Array.from({ length: 8 }, (_, index) => [0, index + 8, 1, Math.floor(index / 2) + 4, "right"]),
+    ...Array.from({ length: 4 }, (_, index) => [1, index + 4, 2, Math.floor(index / 2) + 2, "right"]),
+    ...Array.from({ length: 2 }, (_, index) => [2, index + 2, 3, 1, "right"]),
+    [3, 1, 4, 0, "right"]
+  ];
+
+  links.forEach(([fromRound, fromIndex, toRound, toIndex, side]) => {
+    const from = document.querySelector(`.match[data-round="${fromRound}"][data-index="${fromIndex}"]`);
+    const to = document.querySelector(`.match[data-round="${toRound}"][data-index="${toIndex}"]`);
+    if (!from || !to) return;
+    const active = state.bracket[fromRound]?.[fromIndex]?.winner;
+    svg.appendChild(connectorPath(from, to, side, boardRect, Boolean(active)));
+  });
+}
+
+function connectorPath(from, to, side, boardRect, active) {
+  const fromRect = from.getBoundingClientRect();
+  const toRect = to.getBoundingClientRect();
+  const fromPoint = side === "left"
+    ? { x: fromRect.right - boardRect.left, y: fromRect.top + fromRect.height / 2 - boardRect.top }
+    : { x: fromRect.left - boardRect.left, y: fromRect.top + fromRect.height / 2 - boardRect.top };
+  const toPoint = side === "left"
+    ? { x: toRect.left - boardRect.left, y: toRect.top + toRect.height / 2 - boardRect.top }
+    : { x: toRect.right - boardRect.left, y: toRect.top + toRect.height / 2 - boardRect.top };
+  const midX = fromPoint.x + (toPoint.x - fromPoint.x) / 2;
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("class", `connector-path ${active ? "" : "pending"}`.trim());
+  path.setAttribute("d", `M ${fromPoint.x} ${fromPoint.y} H ${midX} V ${toPoint.y} H ${toPoint.x}`);
+  return path;
 }
 
 function teamButton(code, isWinner, onClick) {
@@ -293,6 +341,8 @@ document.querySelector("#resetBtn").addEventListener("click", () => {
   localStorage.removeItem(STORAGE_KEY);
   seedBracket();
 });
+
+window.addEventListener("resize", drawConnectors);
 
 if (!state.bracket[0].some((match) => match.teams.some(Boolean))) {
   seedBracket();

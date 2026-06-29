@@ -140,12 +140,42 @@ main {
 }
 
 .board {
+  position: relative;
   min-width: 1500px;
   min-height: 830px;
   display: grid;
   grid-template-columns: 130px 1fr 230px 1fr 130px;
   gap: 16px;
   padding: 28px 24px;
+}
+
+.connector-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.connector-path {
+  fill: none;
+  stroke: rgba(78, 210, 133, 0.76);
+  stroke-width: 1.6;
+  stroke-linecap: square;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px rgba(78, 210, 133, 0.28));
+}
+
+.connector-path.pending {
+  stroke: rgba(220, 232, 224, 0.36);
+  filter: none;
+}
+
+.board > :not(.connector-layer) {
+  position: relative;
+  z-index: 1;
 }
 
 .group-stack {
@@ -244,23 +274,6 @@ main {
 
 .match {
   position: relative;
-}
-
-.match::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 16px;
-  height: 1px;
-  background: var(--line);
-}
-
-.left-half .match::after {
-  right: -16px;
-}
-
-.right-half .match::after {
-  left: -16px;
 }
 
 .center-stage {
