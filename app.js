@@ -260,39 +260,54 @@ function drawConnectors() {
   svg.setAttribute("viewBox", `0 0 ${boardRect.width} ${boardRect.height}`);
   svg.innerHTML = "";
 
-  const links = [
-    ...Array.from({ length: 8 }, (_, index) => [0, index, 1, Math.floor(index / 2), "left"]),
-    ...Array.from({ length: 4 }, (_, index) => [1, index, 2, Math.floor(index / 2), "left"]),
-    ...Array.from({ length: 2 }, (_, index) => [2, index, 3, 0, "left"]),
-    [3, 0, 4, 0, "left"],
-    ...Array.from({ length: 8 }, (_, index) => [0, index + 8, 1, Math.floor(index / 2) + 4, "right"]),
-    ...Array.from({ length: 4 }, (_, index) => [1, index + 4, 2, Math.floor(index / 2) + 2, "right"]),
-    ...Array.from({ length: 2 }, (_, index) => [2, index + 2, 3, 1, "right"]),
-    [3, 1, 4, 0, "right"]
+  const groups = [
+    ...Array.from({ length: 4 }, (_, index) => [0, index * 2, index * 2 + 1, 1, index, "left"]),
+    ...Array.from({ length: 2 }, (_, index) => [1, index * 2, index * 2 + 1, 2, index, "left"]),
+    [2, 0, 1, 3, 0, "left"],
+    [3, 0, 0, 4, 0, "left"],
+    ...Array.from({ length: 4 }, (_, index) => [0, index * 2 + 8, index * 2 + 9, 1, index + 4, "right"]),
+    ...Array.from({ length: 2 }, (_, index) => [1, index * 2 + 4, index * 2 + 5, 2, index + 2, "right"]),
+    [2, 2, 3, 3, 1, "right"],
+    [3, 1, 1, 4, 0, "right"]
   ];
 
-  links.forEach(([fromRound, fromIndex, toRound, toIndex, side]) => {
-    const from = document.querySelector(`.match[data-round="${fromRound}"][data-index="${fromIndex}"]`);
+  groups.forEach(([fromRound, firstIndex, secondIndex, toRound, toIndex, side]) => {
+    const first = document.querySelector(`.match[data-round="${fromRound}"][data-index="${firstIndex}"]`);
+    const second = document.querySelector(`.match[data-round="${fromRound}"][data-index="${secondIndex}"]`);
     const to = document.querySelector(`.match[data-round="${toRound}"][data-index="${toIndex}"]`);
-    if (!from || !to) return;
-    const active = state.bracket[fromRound]?.[fromIndex]?.winner;
-    svg.appendChild(connectorPath(from, to, side, boardRect, Boolean(active)));
+    if (!first || !second || !to) return;
+    const active = Boolean(state.bracket[fromRound]?.[firstIndex]?.winner && state.bracket[fromRound]?.[secondIndex]?.winner);
+    svg.appendChild(bracketPath(first, second, to, side, boardRect, active));
   });
 }
 
-function connectorPath(from, to, side, boardRect, active) {
-  const fromRect = from.getBoundingClientRect();
+function bracketPath(first, second, to, side, boardRect, active) {
+  const firstRect = first.getBoundingClientRect();
+  const secondRect = second.getBoundingClientRect();
   const toRect = to.getBoundingClientRect();
-  const fromPoint = side === "left"
-    ? { x: fromRect.right - boardRect.left, y: fromRect.top + fromRect.height / 2 - boardRect.top }
-    : { x: fromRect.left - boardRect.left, y: fromRect.top + fromRect.height / 2 - boardRect.top };
-  const toPoint = side === "left"
+  const firstPoint = side === "left"
+    ? { x: firstRect.right - boardRect.left, y: firstRect.top + firstRect.height / 2 - boardRect.top }
+    : { x: firstRect.left - boardRect.left, y: firstRect.top + firstRect.height / 2 - boardRect.top };
+  const secondPoint = side === "left"
+    ? { x: secondRect.right - boardRect.left, y: secondRect.top + secondRect.height / 2 - boardRect.top }
+    : { x: secondRect.left - boardRect.left, y: secondRect.top + secondRect.height / 2 - boardRect.top };
+  const targetPoint = side === "left"
     ? { x: toRect.left - boardRect.left, y: toRect.top + toRect.height / 2 - boardRect.top }
     : { x: toRect.right - boardRect.left, y: toRect.top + toRect.height / 2 - boardRect.top };
-  const midX = fromPoint.x + (toPoint.x - fromPoint.x) / 2;
+  const gap = targetPoint.x - firstPoint.x;
+  const elbowX = firstPoint.x + gap * 0.42;
+  const trunkY = (firstPoint.y + secondPoint.y) / 2;
   const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
   path.setAttribute("class", `connector-path ${active ? "" : "pending"}`.trim());
-  path.setAttribute("d", `M ${fromPoint.x} ${fromPoint.y} H ${midX} V ${toPoint.y} H ${toPoint.x}`);
+  path.setAttribute(
+    "d",
+    [
+      `M ${firstPoint.x} ${firstPoint.y} H ${elbowX}`,
+      `M ${secondPoint.x} ${secondPoint.y} H ${elbowX}`,
+      `M ${elbowX} ${firstPoint.y} V ${secondPoint.y}`,
+      `M ${elbowX} ${trunkY} H ${targetPoint.x} V ${targetPoint.y}`
+    ].join(" ")
+  );
   return path;
 }
 
